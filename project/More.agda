@@ -1,561 +1,7 @@
 -- more
----
-{-
-title     : "More: Additional constructs of simply-typed lambda calculus"
-layout    : page
-prev      : /DeBruijn/
-permalink : /More/
-next      : /Bisimulation/
----
--}
-
 
 module More where
 
-{-
-So far, we have focussed on a relatively minimal language, based on
-Plotkin's PCF, which supports functions, naturals, and fixpoints.  In
-this chapter we extend our calculus to support the following:
-
-  * primitive numbers
-  * _let_ bindings
-  * products
-  * an alternative formulation of products
-  * sums
-  * unit type
-  * an alternative formulation of unit type
-  * empty type
-  * lists
-
-All of the data types should be familiar from Part I of this textbook.
-For _let_ and the alternative formulations we show how they translate
-to other constructs in the calculus.  Most of the description will be
-informal. We show how to formalise the first four constructs and leave
-the rest as an exercise for the reader.
-
-Our informal descriptions will be in the style of
-Chapter [Lambda](/Lambda/),
-using extrinsically-typed terms,
-while our formalisation will be in the style of
-Chapter [DeBruijn](/DeBruijn/),
-using intrinsically-typed terms.
-
-By now, explaining with symbols should be more concise, more precise,
-and easier to follow than explaining in prose.
-For each construct, we give syntax, typing, reductions, and an example.
-We also give translations where relevant; formally establishing the
-correctness of translations will be the subject of the next chapter.
-
-## Primitive numbers
-
-We define a `Nat` type equivalent to the built-in natural number type
-with multiplication as a primitive operation on numbers:
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      Nat                                 primitive natural numbers
-
-    L, M, N ::= ...                     Terms
-      con c                               constant
-      L `* M                              multiplication
-
-    V, W ::= ...                        Values
-      con c                               constant
-
-### Typing
-
-The hypothesis of the `con` rule is unusual, in that
-it refers to a typing judgment of Agda rather than a
-typing judgment of the defined calculus:
-
-    c : ℕ
-    --------------- con
-    Γ ⊢ con c : Nat
-
-    Γ ⊢ L : Nat
-    Γ ⊢ M : Nat
-    ---------------- _`*_
-    Γ ⊢ L `* M : Nat
-
-### Reduction
-
-A rule that defines a primitive directly, such as the last rule below,
-is called a δ rule.  Here the δ rule defines multiplication of
-primitive numbers in terms of multiplication of naturals as given
-by the Agda standard prelude:
-
-    L —→ L′
-    ----------------- ξ-*₁
-    L `* M —→ L′ `* M
-
-    M —→ M′
-    ----------------- ξ-*₂
-    V `* M —→ V `* M′
-
-    ----------------------------- δ-*
-    con c `* con d —→ con (c * d)
-
-### Example
-
-Here is a function to cube a primitive number:
-
-    cube : ∅ ⊢ Nat ⇒ Nat
-    cube = ƛ x ⇒ x `* x `* x
-
-
-## Let bindings
-
-Let bindings affect only the syntax of terms; they introduce no new
-types or values:
-
-### Syntax
-
-    L, M, N ::= ...                     Terms
-      `let x `= M `in N                   let
-
-### Typing
-
-    Γ ⊢ M ⦂ A
-    Γ , x ⦂ A ⊢ N ⦂ B
-    ------------------------- `let
-    Γ ⊢ `let x `= M `in N ⦂ B
-
-### Reduction
-
-    M —→ M′
-    --------------------------------------- ξ-let
-    `let x `= M `in N —→ `let x `= M′ `in N
-
-    --------------------------------- β-let
-    `let x `= V `in N —→ N [ x := V ]
-
-### Example
-
-Here is a function to raise a primitive number to the tenth power:
-
-    exp10 : ∅ ⊢ Nat ⇒ Nat
-    exp10 = ƛ x ⇒ `let x2  `= x  `* x  `in
-                  `let x4  `= x2 `* x2 `in
-                  `let x5  `= x4 `* x  `in
-                  x5 `* x5
-
-### Translation
-
-We can translate each _let_ term into an application of an abstraction:
-
-    (`let x `= M `in N) †  =  (ƛ x ⇒ (N †)) · (M †)
-
-Here `M †` is the translation of term `M` from a calculus with the
-construct to a calculus without the construct.
-
-
-## Products {#products}
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      A `× B                              product type
-
-    L, M, N ::= ...                     Terms
-      `⟨ M , N ⟩                          pair
-      `proj₁ L                            project first component
-      `proj₂ L                            project second component
-
-    V, W ::= ...                        Values
-      `⟨ V , W ⟩                          pair
-
-### Typing
-
-    Γ ⊢ M ⦂ A
-    Γ ⊢ N ⦂ B
-    ----------------------- `⟨_,_⟩ or `×-I
-    Γ ⊢ `⟨ M , N ⟩ ⦂ A `× B
-
-    Γ ⊢ L ⦂ A `× B
-    ---------------- `proj₁ or `×-E₁
-    Γ ⊢ `proj₁ L ⦂ A
-
-    Γ ⊢ L ⦂ A `× B
-    ---------------- `proj₂ or `×-E₂
-    Γ ⊢ `proj₂ L ⦂ B
-
-### Reduction
-
-    M —→ M′
-    ------------------------- ξ-⟨,⟩₁
-    `⟨ M , N ⟩ —→ `⟨ M′ , N ⟩
-
-    N —→ N′
-    ------------------------- ξ-⟨,⟩₂
-    `⟨ V , N ⟩ —→ `⟨ V , N′ ⟩
-
-    L —→ L′
-    --------------------- ξ-proj₁
-    `proj₁ L —→ `proj₁ L′
-
-    L —→ L′
-    --------------------- ξ-proj₂
-    `proj₂ L —→ `proj₂ L′
-
-    ---------------------- β-proj₁
-    `proj₁ `⟨ V , W ⟩ —→ V
-
-    ---------------------- β-proj₂
-    `proj₂ `⟨ V , W ⟩ —→ W
-
-### Example
-
-Here is a function to swap the components of a pair:
-
-    swap× : ∅ ⊢ A `× B ⇒ B `× A
-    swap× = ƛ z ⇒ `⟨ `proj₂ z , `proj₁ z ⟩
-
-
-## Alternative formulation of products
-
-There is an alternative formulation of products, where in place of two
-ways to eliminate the type we have a case term that binds two
-variables.  We repeat the syntax in full, but only give the new type
-and reduction rules:
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      A `× B                              product type
-
-    L, M, N ::= ...                     Terms
-      `⟨ M , N ⟩                          pair
-      case× L [⟨ x , y ⟩⇒ M ]             case
-
-    V, W ::=                            Values
-      `⟨ V , W ⟩                          pair
-
-### Typing
-
-    Γ ⊢ L ⦂ A `× B
-    Γ , x ⦂ A , y ⦂ B ⊢ N ⦂ C
-    ------------------------------- case× or ×-E
-    Γ ⊢ case× L [⟨ x , y ⟩⇒ N ] ⦂ C
-
-### Reduction
-
-    L —→ L′
-    --------------------------------------------------- ξ-case×
-    case× L [⟨ x , y ⟩⇒ N ] —→ case× L′ [⟨ x , y ⟩⇒ N ]
-
-    --------------------------------------------------------- β-case×
-    case× `⟨ V , W ⟩ [⟨ x , y ⟩⇒ N ] —→ N [ x := V ][ y := W ]
-
-### Example
-
-Here is a function to swap the components of a pair rewritten in the new notation:
-
-    swap×-case : ∅ ⊢ A `× B ⇒ B `× A
-    swap×-case = ƛ z ⇒ case× z
-                         [⟨ x , y ⟩⇒ `⟨ y , x ⟩ ]
-
-### Translation
-
-We can translate the alternative formulation into the one with projections:
-
-      (case× L [⟨ x , y ⟩⇒ N ]) †
-    =
-      `let z `= (L †) `in
-      `let x `= `proj₁ z `in
-      `let y `= `proj₂ z `in
-      (N †)
-
-Here `z` is a variable that does not appear free in `N`.  We refer
-to such a variable as _fresh_.
-
-One might think that we could instead use a more compact translation:
-
-    -- WRONG
-      (case× L [⟨ x , y ⟩⇒ N ]) †
-    =
-      (N †) [ x := `proj₁ (L †) ] [ y := `proj₂ (L †) ]
-
-But this behaves differently.  The first term always reduces `L`
-before `N`, and it computes `` `proj₁ `` and `` `proj₂ `` exactly once.  The
-second term does not reduce `L` to a value before reducing `N`, and
-depending on how many times and where `x` and `y` appear in `N`, it
-may reduce `L` many times or not at all, and it may compute `` `proj₁ ``
-and `` `proj₂ `` many times or not at all.
-
-We can also translate back the other way:
-
-    (`proj₁ L) ‡  =  case× (L ‡) [⟨ x , y ⟩⇒ x ]
-    (`proj₂ L) ‡  =  case× (L ‡) [⟨ x , y ⟩⇒ y ]
-
-## Sums {#sums}
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      A `⊎ B                              sum type
-
-    L, M, N ::= ...                     Terms
-      `inj₁ M                             inject first component
-      `inj₂ N                             inject second component
-      case⊎ L [inj₁ x ⇒ M |inj₂ y ⇒ N ]    case
-
-    V, W ::= ...                        Values
-      `inj₁ V                             inject first component
-      `inj₂ W                             inject second component
-
-### Typing
-
-    Γ ⊢ M ⦂ A
-    -------------------- `inj₁ or ⊎-I₁
-    Γ ⊢ `inj₁ M ⦂ A `⊎ B
-
-    Γ ⊢ N ⦂ B
-    -------------------- `inj₂ or ⊎-I₂
-    Γ ⊢ `inj₂ N ⦂ A `⊎ B
-
-    Γ ⊢ L ⦂ A `⊎ B
-    Γ , x ⦂ A ⊢ M ⦂ C
-    Γ , y ⦂ B ⊢ N ⦂ C
-    ----------------------------------------- case⊎ or ⊎-E
-    Γ ⊢ case⊎ L [inj₁ x ⇒ M |inj₂ y ⇒ N ] ⦂ C
-
-### Reduction
-
-    M —→ M′
-    ------------------- ξ-inj₁
-    `inj₁ M —→ `inj₁ M′
-
-    N —→ N′
-    ------------------- ξ-inj₂
-    `inj₂ N —→ `inj₂ N′
-
-    L —→ L′
-    ---------------------------------------------------------------------- ξ-case⊎
-    case⊎ L [inj₁ x ⇒ M |inj₂ y ⇒ N ] —→ case⊎ L′ [inj₁ x ⇒ M |inj₂ y ⇒ N ]
-
-    --------------------------------------------------------- β-inj₁
-    case⊎ (`inj₁ V) [inj₁ x ⇒ M |inj₂ y ⇒ N ] —→ M [ x := V ]
-
-    --------------------------------------------------------- β-inj₂
-    case⊎ (`inj₂ W) [inj₁ x ⇒ M |inj₂ y ⇒ N ] —→ N [ y := W ]
-
-### Example
-
-Here is a function to swap the components of a sum:
-
-    swap⊎ : ∅ ⊢ A `⊎ B ⇒ B `⊎ A
-    swap⊎ = ƛ z ⇒ case⊎ z
-                    [inj₁ x ⇒ `inj₂ x
-                    |inj₂ y ⇒ `inj₁ y ]
-
-
-## Unit type
-
-For the unit type, there is a way to introduce
-values of the type but no way to eliminate values of the type.
-There are no reduction rules.
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      `⊤                                  unit type
-
-    L, M, N ::= ...                     Terms
-      `tt                                 unit value
-
-    V, W ::= ...                        Values
-      `tt                                 unit value
-
-### Typing
-
-    ------------ `tt or ⊤-I
-    Γ ⊢ `tt ⦂ `⊤
-
-### Reduction
-
-(none)
-
-### Example
-
-Here is the isomorphism between `A` and ``A `× `⊤``:
-
-    to×⊤ : ∅ ⊢ A ⇒ A `× `⊤
-    to×⊤ = ƛ x ⇒ `⟨ x , `tt ⟩
-
-    from×⊤ : ∅ ⊢ A `× `⊤ ⇒ A
-    from×⊤ = ƛ z ⇒ `proj₁ z
-
-
-## Alternative formulation of unit type
-
-There is an alternative formulation of the unit type, where in place of
-no way to eliminate the type we have a case term that binds zero variables.
-We repeat the syntax in full, but only give the new type and reduction rules:
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      `⊤                                  unit type
-
-    L, M, N ::= ...                     Terms
-      `tt                                 unit value
-      `case⊤ L [tt⇒ N ]                   case
-
-    V, W ::= ...                        Values
-      `tt                                 unit value
-
-### Typing
-
-    Γ ⊢ L ⦂ `⊤
-    Γ ⊢ M ⦂ A
-    ------------------------ case⊤ or ⊤-E
-    Γ ⊢ case⊤ L [tt⇒ M ] ⦂ A
-
-### Reduction
-
-    L —→ L′
-    ------------------------------------- ξ-case⊤
-    case⊤ L [tt⇒ M ] —→ case⊤ L′ [tt⇒ M ]
-
-    ----------------------- β-case⊤
-    case⊤ `tt [tt⇒ M ] —→ M
-
-### Example
-
-Here is half the isomorphism between `A` and ``A `× `⊤`` rewritten in the new notation:
-
-    from×⊤-case : ∅ ⊢ A `× `⊤ ⇒ A
-    from×⊤-case = ƛ z ⇒ case× z
-                          [⟨ x , y ⟩⇒ case⊤ y
-                                        [tt⇒ x ] ]
-
-
-### Translation
-
-We can translate the alternative formulation into one without case:
-
-    (case⊤ L [tt⇒ M ]) †  =  `let z `= (L †) `in (M †)
-
-Here `z` is a variable that does not appear free in `M`.
-
-
-## Empty type
-
-For the empty type, there is a way to eliminate values of
-the type but no way to introduce values of the type.  There are no
-values of the type and no β rule, but there is a ξ rule.  The `case⊥`
-construct plays a role similar to `⊥-elim` in Agda:
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      `⊥                                  empty type
-
-    L, M, N ::= ...                     Terms
-      case⊥ L []                          case
-
-### Typing
-
-    Γ ⊢ L ⦂ `⊥
-    ------------------ case⊥ or ⊥-E
-    Γ ⊢ case⊥ L [] ⦂ A
-
-### Reduction
-
-    L —→ L′
-    ------------------------- ξ-case⊥
-    case⊥ L [] —→ case⊥ L′ []
-
-### Example
-
-Here is the isomorphism between `A` and ``A `⊎ `⊥``:
-
-    to⊎⊥ : ∅ ⊢ A ⇒ A `⊎ `⊥
-    to⊎⊥ = ƛ x ⇒ `inj₁ x
-
-    from⊎⊥ : ∅ ⊢ A `⊎ `⊥ ⇒ A
-    from⊎⊥ = ƛ z ⇒ case⊎ z
-                     [inj₁ x ⇒ x
-                     |inj₂ y ⇒ case⊥ y
-                                 [] ]
-
-## Lists
-
-### Syntax
-
-    A, B, C ::= ...                     Types
-      `List A                             list type
-
-    L, M, N ::= ...                     Terms
-      `[]                                 nil
-      M `∷ N                              cons
-      caseL L [[]⇒ M | x ∷ y ⇒ N ]        case
-
-    V, W ::= ...                        Values
-      `[]                                 nil
-      V `∷ W                              cons
-
-### Typing
-
-    ----------------- `[] or List-I₁
-    Γ ⊢ `[] ⦂ `List A
-
-    Γ ⊢ M ⦂ A
-    Γ ⊢ N ⦂ `List A
-    -------------------- _`∷_ or List-I₂
-    Γ ⊢ M `∷ N ⦂ `List A
-
-    Γ ⊢ L ⦂ `List A
-    Γ ⊢ M ⦂ B
-    Γ , x ⦂ A , xs ⦂ `List A ⊢ N ⦂ B
-    -------------------------------------- caseL or List-E
-    Γ ⊢ caseL L [[]⇒ M | x ∷ xs ⇒ N ] ⦂ B
-
-### Reduction
-
-    M —→ M′
-    ----------------- ξ-∷₁
-    M `∷ N —→ M′ `∷ N
-
-    N —→ N′
-    ----------------- ξ-∷₂
-    V `∷ N —→ V `∷ N′
-
-    L —→ L′
-    --------------------------------------------------------------- ξ-caseL
-    caseL L [[]⇒ M | x ∷ xs ⇒ N ] —→ caseL L′ [[]⇒ M | x ∷ xs ⇒ N ]
-
-    ------------------------------------ β-[]
-    caseL `[] [[]⇒ M | x ∷ xs ⇒ N ] —→ M
-
-    --------------------------------------------------------------- β-∷
-    caseL (V `∷ W) [[]⇒ M | x ∷ xs ⇒ N ] —→ N [ x := V ][ xs := W ]
-
-### Example
-
-Here is the map function for lists:
-
-    mapL : ∅ ⊢ (A ⇒ B) ⇒ `List A ⇒ `List B
-    mapL = μ mL ⇒ ƛ f ⇒ ƛ xs ⇒
-             caseL xs
-               [[]⇒ `[]
-               | x ∷ xs ⇒ f · x `∷ mL · f · xs ]
-
-
-## Formalisation
-
-We now show how to formalise
-
-  * primitive numbers
-  * _let_ bindings
-  * products
-  * an alternative formulation of products
-
-and leave formalisation of the remaining constructs as an exercise.
-
-
-### Imports -}
 
 
 import Relation.Binary.PropositionalEquality as Eq
@@ -564,10 +10,6 @@ open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Nat using (ℕ; zero; suc; _*_; _<_; _≤?_; z≤n; s≤s)
 open import Relation.Nullary using (¬_)
 open import Relation.Nullary.Decidable using (True; toWitness)
-
-
-{-
-### Syntax -}
 
 
 infix  4 _⊢_
@@ -586,9 +28,6 @@ infix  9 `_
 infix  9 S_
 infix  9 #_
 
-{-
-### Types -}
-
 
 data Type : Set where
   `ℕ    : Type
@@ -596,16 +35,9 @@ data Type : Set where
   Nat   : Type
   _`×_  : Type → Type → Type
 
-{-
-### Contexts -}
-
-
 data Context : Set where
   ∅   : Context
   _,_ : Context → Type → Context
-
-{-
-### Variables and the lookup judgment -}
 
 
 data _∋_ : Context → Type → Set where
@@ -618,9 +50,6 @@ data _∋_ : Context → Type → Set where
     → Γ ∋ B
       ---------
     → Γ , A ∋ B
-
-
-{- ### Terms and the typing judgment -}
 
 
 data _⊢_ : Context → Type → Set where
@@ -718,10 +147,6 @@ data _⊢_ : Context → Type → Set where
     → Γ ⊢ C
 
 
-{- 
-### Abbreviating de Bruijn indices -}
-
-
 length : Context → ℕ
 length ∅        =  zero
 length (Γ , _)  =  suc (length Γ)
@@ -740,9 +165,6 @@ count {Γ , _} {(suc n)} (s≤s p)    =  S (count p)
     --------------------------------
   → Γ ⊢ lookup (toWitness n∈Γ)
 #_ n {n∈Γ}  =  ` count (toWitness n∈Γ)
-
-{-
-## Renaming -}
 
 
 ext : ∀ {Γ Δ}
@@ -771,9 +193,6 @@ rename ρ (`proj₁ L)     =  `proj₁ (rename ρ L)
 rename ρ (`proj₂ L)     =  `proj₂ (rename ρ L)
 rename ρ (case× L M)    =  case× (rename ρ L) (rename (ext (ext ρ)) M)
 
-{-
-## Simultaneous Substitution -}
-
 
 exts : ∀ {Γ Δ} → (∀ {A} → Γ ∋ A → Δ ⊢ A) → (∀ {A B} → Γ , A ∋ B → Δ , A ⊢ B)
 exts σ Z      =  ` Z
@@ -794,9 +213,6 @@ subst σ `⟨ M , N ⟩     =  `⟨ subst σ M , subst σ N ⟩
 subst σ (`proj₁ L)     =  `proj₁ (subst σ L)
 subst σ (`proj₂ L)     =  `proj₂ (subst σ L)
 subst σ (case× L M)    =  case× (subst σ L) (subst (exts (exts σ)) M)
-
-{-
-## Single and double substitution -}
 
 
 substZero : ∀ {Γ}{A B} → Γ ⊢ A → Γ , A ∋ B → Γ ⊢ B
@@ -822,9 +238,6 @@ _[_][_] {Γ} {A} {B} N V W =  subst {Γ , A , B} {Γ} σ N
   σ Z          =  W
   σ (S Z)      =  V
   σ (S (S x))  =  ` x
-
-{-
-## Values -}
 
 
 data Value : ∀ {Γ A} → Γ ⊢ A → Set where
@@ -859,13 +272,6 @@ data Value : ∀ {Γ A} → Γ ⊢ A → Set where
     → Value W
       ----------------
     → Value `⟨ V , W ⟩
-
-{-
-Implicit arguments need to be supplied when they are
-not fixed by the given arguments.
-
-## Reduction -}
-
 
 infix 2 _—→_
 
@@ -994,9 +400,6 @@ data _—→_ : ∀ {Γ A} → (Γ ⊢ A) → (Γ ⊢ A) → Set where
     → case× `⟨ V , W ⟩ M —→ M [ V ][ W ]
 
 
-{-
-## Reflexive and transitive closure -}
-
 
 infix  2 _—↠_
 infix  1 begin_
@@ -1022,10 +425,6 @@ begin_ : ∀ {Γ A} {M N : Γ ⊢ A}
 begin M—↠N = M—↠N
 
 
-{-
-## Values do not reduce
--}
-
 V¬—→ : ∀ {Γ A} {M N : Γ ⊢ A}
   → Value M
     ----------
@@ -1036,10 +435,6 @@ V¬—→ (V-suc VM)   (ξ-suc M—→M′)     =  V¬—→ VM M—→M′
 V¬—→ V-con        ()
 V¬—→ V-⟨ VM , _ ⟩ (ξ-⟨,⟩₁ M—→M′)    =  V¬—→ VM M—→M′
 V¬—→ V-⟨ _ , VN ⟩ (ξ-⟨,⟩₂ _ N—→N′)  =  V¬—→ VN N—→N′
-
-
-{-
-## Progress -}
 
 
 data Progress {A} (M : ∅ ⊢ A) : Set where
@@ -1099,10 +494,6 @@ progress (case× L M) with progress L
 ...    | done (V-⟨ VM , VN ⟩)               =  step (β-case× VM VN)
 
 
-{-
-## Evaluation -}
-
-
 record Gas : Set where
   constructor gas
   field
@@ -1137,10 +528,6 @@ eval (gas (suc m)) L with progress L
 ... | done VL                            =  steps (L ∎) (done VL)
 ... | step {M} L—→M with eval (gas m) M
 ...    | steps M—↠N fin                  =  steps (L —→⟨ L—→M ⟩ M—↠N) fin
-
-
-{-
-## Examples -}
 
 
 cube : ∅ ⊢ Nat ⇒ Nat
@@ -1214,46 +601,11 @@ _ =
      `⟨ `zero , con 42 ⟩
    ∎
 
-{-
-#### Exercise `More` (recommended and practice)
-
-Formalise the remaining constructs defined in this chapter.
-Make your changes in this file.
-Evaluate each example, applied to data as needed,
-to confirm it returns the expected answer:
-
-  * sums (recommended)
-  * unit type (practice)
-  * an alternative formulation of unit type (practice)
-  * empty type (recommended)
-  * lists (practice)
-
-Please delimit any code you add as follows:
-
-    -- begin
-    -- end
-
-
-#### Exercise `double-subst` (stretch)
-
-Show that a double substitution is equivalent to two single
-substitutions. -}
-
 postulate
   double-subst :
     ∀ {Γ A B C} {V : Γ ⊢ A} {W : Γ ⊢ B} {N : Γ , A , B ⊢ C} →
       N [ V ][ W ] ≡ (N [ rename S_ W ]) [ V ]
 
-{-
-Note the arguments need to be swapped and `W` needs to have
-its context adjusted via renaming in order for the right-hand
-side to be well typed.
-
-## Test examples
-
-We repeat the [test examples](/DeBruijn/#examples) from Chapter [DeBruijn](/DeBruijn/),
-in order to make sure we have not broken anything in the process of extending our base calculus.
--}
 
 two : ∀ {Γ} → Γ ⊢ `ℕ
 two = `suc `suc `zero
