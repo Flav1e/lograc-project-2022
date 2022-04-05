@@ -1,5 +1,5 @@
 
-module  Lambda where
+module Lambda where
 
 --import
 
@@ -56,26 +56,11 @@ plusᶜ =  ƛ "m" ⇒ ƛ "n" ⇒ ƛ "s" ⇒ ƛ "z" ⇒
 sucᶜ : Term
 sucᶜ = ƛ "n" ⇒ `suc (` "n")
 
---Exercise `mul` (recommended)
-{-Write out the definition of a lambda term that multiplies
-two natural numbers.  Your definition may use `plus` as
-defined earlier.-}
 -- Your code goes here
-
-
--- Exercise `mulᶜ` (practice)
-{-Write out the definition of a lambda term that multiplies
-two natural numbers represented as Church numerals. Your
-definition may use `plusᶜ` as defined earlier (or may not
-— there are nice definitions both ways).-}
 
 -- Your code goes here
 
 -- Exercise `primed` (stretch) {#primed}
-{-
-Some people find it annoying to write `` ` "x" `` instead of `x`.
-We can make examples with lambda terms slightly easier to write
-by adding the following definitions:-}
 
 var? : (t : Term) → Bool
 var? (` _)  =  true
@@ -101,93 +86,6 @@ plus′ = μ′ + ⇒ ƛ′ m ⇒ ƛ′ n ⇒
   m  =  ` "m"
   n  =  ` "n"
 
--- Write out the definition of multiplication in the same style.
-
--- Formal vs informal
-{-
-In informal presentation of formal semantics, one uses choice of
-variable name to disambiguate and writes `x` rather than `` ` x ``
-for a term that is a variable. Agda requires we distinguish.
-
-Similarly, informal presentation often use the same notation for
-function types, lambda abstraction, and function application in both
-the _object language_ (the language one is describing) and the
-_meta-language_ (the language in which the description is written),
-trusting readers can use context to distinguish the two.  Agda is
-not quite so forgiving, so here we use `ƛ x ⇒ N` and `L · M` for the
-object language, as compared to `λ x → N` and `L M` in our
-meta-language, Agda.
-
--}
--- Bound and free variables
-{-
-In an abstraction `ƛ x ⇒ N` we call `x` the _bound_ variable
-and `N` the _body_ of the abstraction.  A central feature
-of lambda calculus is that consistent renaming of bound variables
-leaves the meaning of a term unchanged.  Thus the five terms
-
-* `` ƛ "s" ⇒ ƛ "z" ⇒ ` "s" · (` "s" · ` "z") ``
-* `` ƛ "f" ⇒ ƛ "x" ⇒ ` "f" · (` "f" · ` "x") ``
-* `` ƛ "sam" ⇒ ƛ "zelda" ⇒ ` "sam" · (` "sam" · ` "zelda") ``
-* `` ƛ "z" ⇒ ƛ "s" ⇒ ` "z" · (` "z" · ` "s") ``
-* `` ƛ "😇" ⇒ ƛ "😈" ⇒ ` "😇" · (` "😇" · ` "😈" ) ``
-
-are all considered equivalent.  Following the convention introduced
-by Haskell Curry, who used the Greek letter `α` (_alpha_) to label such rules,
-this equivalence relation is called _alpha renaming_.
-
-As we descend from a term into its subterms, variables
-that are bound may become free.  Consider the following terms:
-
-* `` ƛ "s" ⇒ ƛ "z" ⇒ ` "s" · (` "s" · ` "z") ``
-  has both `s` and `z` as bound variables.
-
-* `` ƛ "z" ⇒ ` "s" · (` "s" · ` "z") ``
-  has `z` bound and `s` free.
-
-* `` ` "s" · (` "s" · ` "z") ``
-  has both `s` and `z` as free variables.
-
-We say that a term with no free variables is _closed_; otherwise it is
-_open_.  Of the three terms above, the first is closed and the other
-two are open.  We will focus on reduction of closed terms.
-
-Different occurrences of a variable may be bound and free.
-In the term
-
-    (ƛ "x" ⇒ ` "x") · ` "x"
-
-the inner occurrence of `x` is bound while the outer occurrence is free.
-By alpha renaming, the term above is equivalent to
-
-    (ƛ "y" ⇒ ` "y") · ` "x"
-
-in which `y` is bound and `x` is free.  A common convention, called the
-_Barendregt convention_, is to use alpha renaming to ensure that the bound
-variables in a term are distinct from the free variables, which can
-avoid confusions that may arise if bound and free variables have the
-same names.
-
-Case and recursion also introduce bound variables, which are also subject
-to alpha renaming. In the term
-
-    μ "+" ⇒ ƛ "m" ⇒ ƛ "n" ⇒
-      case ` "m"
-        [zero⇒ ` "n"
-        |suc "m" ⇒ `suc (` "+" · ` "m" · ` "n") ]
-
-notice that there are two binding occurrences of `m`, one in the first
-line and one in the last line.  It is equivalent to the following term,
-
-    μ "plus" ⇒ ƛ "x" ⇒ ƛ "y" ⇒
-      case ` "x"
-        [zero⇒ ` "y"
-        |suc "x′" ⇒ `suc (` "plus" · ` "x′" · ` "y") ]
-
-where the two binding occurrences corresponding to `m` now have distinct
-names, `x` and `x′`.
--}
-
 -- Values
 data Value : Term → Set where
 
@@ -203,25 +101,6 @@ data Value : Term → Set where
     → Value V
       --------------
     → Value (`suc V)
-
--- Formal vs informal
-{-In informal presentations of formal semantics, using
-`V` as the name of a metavariable is sufficient to
-indicate that it is a value. In Agda, we must explicitly
-invoke the `Value` predicate.-}
-
--- Other approaches
-
-{- An alternative is not to focus on closed terms,
-to treat variables as values, and to treat
-`ƛ x ⇒ N` as a value only if `N` is a value.
-Indeed, this is how Agda normalises terms.
-We consider this approach in
-Chapter [Untyped](/Untyped/). -}
-
--- Substitution
--- Here is the formal definition of substitution by closed terms in Agda:
-
 
 infix 9 _[_:=_]
 
@@ -242,7 +121,7 @@ _[_:=_] : Term → Id → Term → Term
 ... | yes _          =  μ x ⇒ N
 ... | no  _          =  μ x ⇒ N [ y := V ]
 
--- Examples
+-- Examples hehe
 
 _ : (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ] ≡ ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")
 _ = refl
@@ -259,31 +138,9 @@ _ = refl
 _ : (ƛ "y" ⇒ ` "y") [ "x" := `zero ] ≡ ƛ "y" ⇒ ` "y"
 _ = refl
 
--- Quiz
-
-{- What is the result of the following substitution?
-
-    (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ ` "x")) [ "x" := `zero ]
-
-1. `` (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ ` "x")) ``
-2. `` (ƛ "y" ⇒ ` "x" · (ƛ "x" ⇒ `zero)) ``
-3. `` (ƛ "y" ⇒ `zero · (ƛ "x" ⇒ ` "x")) ``
-4. `` (ƛ "y" ⇒ `zero · (ƛ "x" ⇒ `zero)) ``
--}
-
--- Exercise `_[_:=_]′` (stretch)
- 
-{- The definition of substitution above has three clauses (`ƛ`, `case`,
-and `μ`) that invoke a `with` clause to deal with bound variables.
-Rewrite the definition to factor the common part of these three
-clauses into a single function, defined by mutual recursion with
-substitution. -}
-
 -- Your code goes here
 
 -- Reduction
--- Here are the rules formalised in Agda:
-
 infix 4 _—→_
 
 data _—→_ : Term → Term → Set where
@@ -327,33 +184,6 @@ data _—→_ : Term → Term → Set where
       ------------------------------
     → μ x ⇒ M —→ M [ x := μ x ⇒ M ]
 
--- Quiz 
-{- 
-What does the following term step to?
-
-    (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")  —→  ???
-
-1.  `` (ƛ "x" ⇒ ` "x") ``
-2.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
-3.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
-
-What does the following term step to?
-
-    (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x")  —→  ???
-
-1.  `` (ƛ "x" ⇒ ` "x") ``
-2.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
-3.  `` (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") · (ƛ "x" ⇒ ` "x") ``
-
-What does the following term step to?  (Where `twoᶜ` and `sucᶜ` are as
-defined above.)
-
-    twoᶜ · sucᶜ · `zero  —→  ???
-
-1.  `` sucᶜ · (sucᶜ · `zero) ``
-2.  `` (ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")) · `zero ``
-3.  `` `zero `` -}
-
 -- Reflexive and transitive closure
 
 infix  2 _—↠_
@@ -394,10 +224,6 @@ data _—↠′_ : Term → Term → Set where
     → M —↠′ N
       -------
     → L —↠′ N
-
---  Exercise `—↠≲—↠′` (practice)
-{- Show that the first notion of reflexive and transitive closure
-above embeds into the second. Why are they not isomorphic? -}
 
 -- Your code goes here
 
@@ -509,8 +335,6 @@ _ =
    `suc (`suc (`suc (`suc `zero)))
   ∎
 
--- Exercise `plus-example` (practice)
-{- Write out the reduction sequence demonstrating that one plus one is two. -}
 
 -- Your code goes here
 
@@ -523,42 +347,6 @@ data Type : Set where
   `ℕ : Type
 
 -- Precedence
-{- As in Agda, functions of two or more arguments are represented via
-currying. This is made more convenient by declaring `_⇒_` to
-associate to the right and `_·_` to associate to the left.
-Thus:
-
-* ``(`ℕ ⇒ `ℕ) ⇒ `ℕ ⇒ `ℕ`` stands for ``((`ℕ ⇒ `ℕ) ⇒ (`ℕ ⇒ `ℕ))``.
-* `plus · two · two` stands for `(plus · two) · two`. -}  
-
--- Quiz
-
-{- 
-* What is the type of the following term?
-
-    `` ƛ "s" ⇒ ` "s" · (` "s"  · `zero) ``
-
-  1. `` (`ℕ ⇒ `ℕ) ⇒ (`ℕ ⇒ `ℕ) ``
-  2. `` (`ℕ ⇒ `ℕ) ⇒ `ℕ ``
-  3. `` `ℕ ⇒ (`ℕ ⇒ `ℕ) ``
-  4. `` `ℕ ⇒ `ℕ ⇒ `ℕ ``
-  5. `` `ℕ ⇒ `ℕ ``
-  6. `` `ℕ ``
-
-  Give more than one answer if appropriate.
-
-* What is the type of the following term?
-
-    `` (ƛ "s" ⇒ ` "s" · (` "s"  · `zero)) · sucᶜ ``
-
-  1. `` (`ℕ ⇒ `ℕ) ⇒ (`ℕ ⇒ `ℕ) ``
-  2. `` (`ℕ ⇒ `ℕ) ⇒ `ℕ ``
-  3. `` `ℕ ⇒ (`ℕ ⇒ `ℕ) ``
-  4. `` `ℕ ⇒ `ℕ ⇒ `ℕ ``
-  5. `` `ℕ ⇒ `ℕ ``
-  6. `` `ℕ ``
-
-  Give more than one answer if appropriate. -}
 
  -- Typing
  -- Contexts
@@ -568,16 +356,6 @@ infixl 5  _,_⦂_
 data Context : Set where
   ∅     : Context
   _,_⦂_ : Context → Id → Type → Context
-
---  Exercise `Context-≃` (practice)
-{- Show that `Context` is isomorphic to `List (Id × Type)`.
-For instance, the isomorphism relates the context
-
-    ∅ , "s" ⦂ `ℕ ⇒ `ℕ , "z" ⦂ `ℕ
-
-to the list
-
-    [ ⟨ "z" , `ℕ ⟩ , ⟨ "s" , `ℕ ⇒ `ℕ ⟩ ] -}
 
 -- Your code goes here
 
@@ -701,46 +479,7 @@ Ch A = (A ⇒ A) ⇒ A ⇒ A
 ⊢2+2ᶜ = ⊢plusᶜ · ⊢twoᶜ · ⊢twoᶜ · ⊢sucᶜ · ⊢zero
 
 -- Interaction with Agda
-{- Construction of a type derivation may be done interactively.
-Start with the declaration:
 
-    ⊢sucᶜ : ∅ ⊢ sucᶜ ⦂ `ℕ ⇒ `ℕ
-    ⊢sucᶜ = ?
-
-Typing C-c C-l causes Agda to create a hole and tell us its expected type:
-
-    ⊢sucᶜ = { }0
-    ?0 : ∅ ⊢ sucᶜ ⦂ `ℕ ⇒ `ℕ
-
-Now we fill in the hole by typing C-c C-r. Agda observes that
-the outermost term in `sucᶜ` is `ƛ`, which is typed using `⊢ƛ`. The
-`⊢ƛ` rule in turn takes one argument, which Agda leaves as a hole:
-
-    ⊢sucᶜ = ⊢ƛ { }1
-    ?1 : ∅ , "n" ⦂ `ℕ ⊢ `suc ` "n" ⦂ `ℕ
-
-We can fill in the hole by typing C-c C-r again:
-
-    ⊢sucᶜ = ⊢ƛ (⊢suc { }2)
-    ?2 : ∅ , "n" ⦂ `ℕ ⊢ ` "n" ⦂ `ℕ
-
-And again:
-
-    ⊢sucᶜ = ⊢ƛ (⊢suc (⊢` { }3))
-    ?3 : ∅ , "n" ⦂ `ℕ ∋ "n" ⦂ `ℕ
-
-A further attempt with C-c C-r yields the message:
-
-    Don't know which constructor to introduce of Z or S
-
-We can fill in `Z` by hand. If we type C-c C-space, Agda will confirm we are done:
-
-    ⊢sucᶜ = ⊢ƛ (⊢suc (⊢` Z))
-
-The entire process can be automated using Agsy, invoked with C-c C-a.
-
-Chapter [Inference](/Inference/)
-will show how to use Agda to compute type derivations directly. -}
 
 -- Lookup is functional
 ∋-functional : ∀ {Γ x A B} → Γ ∋ x ⦂ A → Γ ∋ x ⦂ B → A ≡ B
@@ -759,31 +498,7 @@ nope₂ (⊢ƛ (⊢` ∋x · ⊢` ∋x′))  =  contradiction (∋-functional �
   contradiction : ∀ {A B} → ¬ (A ⇒ B ≡ A)
   contradiction ()
 
--- Quiz  
-{- For each of the following, give a type `A` for which it is derivable,
-or explain why there is no such `A`.
-
-1. `` ∅ , "y" ⦂ `ℕ ⇒ `ℕ , "x" ⦂ `ℕ ⊢ ` "y" · ` "x" ⦂ A ``
-2. `` ∅ , "y" ⦂ `ℕ ⇒ `ℕ , "x" ⦂ `ℕ ⊢ ` "x" · ` "y" ⦂ A ``
-3. `` ∅ , "y" ⦂ `ℕ ⇒ `ℕ ⊢ ƛ "x" ⇒ ` "y" · ` "x" ⦂ A ``
-
-For each of the following, give types `A`, `B`, and `C` for which it is derivable,
-or explain why there are no such types.
-
-1. `` ∅ , "x" ⦂ A ⊢ ` "x" · ` "x" ⦂ B ``
-2. `` ∅ , "x" ⦂ A , "y" ⦂ B ⊢ ƛ "z" ⇒ ` "x" · (` "y" · ` "z") ⦂ C `` -}
-
--- Exercise `⊢mul` (recommended)
-
-{- Using the term `mul` you defined earlier, write out the derivation
-showing that it is well typed. -}
-
 -- Your code goes here
-
--- Exercise `⊢mulᶜ` (practice)
-
-{- Using the term `mulᶜ` you defined earlier, write out the derivation
-showing that it is well typed. -}
 
 -- Your code goes here
 
@@ -810,5 +525,3 @@ This chapter uses the following unicode:
 
 We compose reduction `—→` from an em dash `—` and an arrow `→`.
 Similarly for reflexive and transitive closure `—↠`. -}
-
-
