@@ -1,8 +1,5 @@
 -- properties
 
-{- warning !!!! we need to import part 1 (Isomorphism) to make this file working 
-we have to create a special folder-}
-
 module Properties where
 
 open import Relation.Binary.PropositionalEquality
@@ -16,7 +13,7 @@ open import Data.Product
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Function using (_∘_)
-open import plfa.part1.Isomorphism
+open import part1Isomorphism
 open import Lambda
 
 V¬—→ : ∀ {M N}

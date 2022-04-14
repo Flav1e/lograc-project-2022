@@ -8,11 +8,7 @@ open import Data.Nat.Properties using (+-comm)
 
 _∘_ : ∀ {A B C : Set} → (B → C) → (A → B) → (A → C)
 (g ∘ f) x  = g (f x)
-```
-Thus, `g ∘ f` is the function that first applies `f` and
-then applies `g`.  An equivalent definition, exploiting lambda
-expressions, is as follows:
-```
+
 _∘′_ : ∀ {A B C : Set} → (B → C) → (A → B) → (A → C)
 g ∘′ f  =  λ x → g (f x)
 
@@ -25,10 +21,7 @@ postulate
 _+′_ : ℕ → ℕ → ℕ
 m +′ zero  = m
 m +′ suc n = suc (m +′ n)
-```
-Applying commutativity, it is easy to show that both operators always
-return the same result given the same arguments:
-```
+
 same-app : ∀ (m n : ℕ) → m +′ n ≡ m + n
 same-app m n rewrite +-comm m n = helper m n
   where
@@ -160,14 +153,7 @@ record _≲_ (A B : Set) : Set where
     from    : B → A
     from∘to : ∀ (x : A) → from (to x) ≡ x
 open _≲_
-```
-It is the same as an isomorphism, save that it lacks the `to∘from` field.
-Hence, we know that `from` is left-inverse to `to`, but not that `from`
-is right-inverse to `to`.
 
-Embedding is reflexive and transitive, but not symmetric.  The proofs
-are cut down versions of the similar proofs for isomorphism:
-```
 ≲-refl : ∀ {A : Set} → A ≲ A
 ≲-refl =
   record
