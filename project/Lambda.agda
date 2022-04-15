@@ -20,11 +20,13 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 Id : Set
 Id = String
 
-infix  5  ƛ_⇒_
-infix  5  μ_⇒_
-infixl 7  _·_
-infix  8  `suc_
-infix  9  `_
+infix  5  ƛ_⇒_ --abstraction
+infix  5  μ_⇒_ --fixpoint
+infixl 7  _·_ --application
+infix  8  `suc_ --successor
+infix  9  `_  --variables
+infixl 10 _inl_ -- left injection 
+infixr 10 _inr_ --right injection
 
 data Term : Set where
   `_                      :  Id → Term
@@ -34,6 +36,10 @@ data Term : Set where
   `suc_                   :  Term → Term
   case_[zero⇒_|suc_⇒_]    :  Term → Term → Id → Term → Term
   μ_⇒_                    :  Id → Term → Term
+  _inl_                     : Term → Term → Term
+  _inr_                     : Term → Term → Term
+  case_[_inl⇒_|inr_⇒_] :  Term → Term → Id → Term → Term
+
 
  --Example terms
 
@@ -102,6 +108,8 @@ data Value : Term → Set where
       --------------
     → Value (`suc V)
 
+-- add inl et inl
+
 infix 9 _[_:=_]
 
 _[_:=_] : Term → Id → Term → Term
@@ -120,6 +128,9 @@ _[_:=_] : Term → Id → Term → Term
 (μ x ⇒ N) [ y := V ] with x ≟ y
 ... | yes _          =  μ x ⇒ N
 ... | no  _          =  μ x ⇒ N [ y := V ]
+
+-- to be completed
+-- (case V [x inl⇒M|inr y⇒N]) [ y := V ] with x ≟ y
 
 -- Examples hehe
 
