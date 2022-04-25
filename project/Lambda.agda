@@ -25,8 +25,8 @@ infix  5  μ_⇒_ --fixpoint
 infixl 7  _·_ --application
 infix  8  `suc_ --successor
 infix  9  `_  --variables
-infixl 10 _inl_ -- left injection 
-infixr 10 _inr_ --right injection
+infixl 10 _inl -- left injection 
+infixr 10 inr_ --right injection
 
 data Term : Set where
   `_                      :  Id → Term
@@ -36,8 +36,8 @@ data Term : Set where
   `suc_                   :  Term → Term
   case_[zero⇒_|suc_⇒_]    :  Term → Term → Id → Term → Term
   μ_⇒_                    :  Id → Term → Term
-  _inl_                     : Term → Term → Term
-  _inr_                     : Term → Term → Term
+  _inl                     : Term → Term 
+  inr_                     : Term → Term 
   case_[_inl⇒_|inr_⇒_] :  Term → Term → Id → Term → Term
 
 
@@ -129,11 +129,22 @@ _[_:=_] : Term → Id → Term → Term
 ... | yes _          =  μ x ⇒ N
 ... | no  _          =  μ x ⇒ N [ y := V ]
 
+{-
+(case K [ x₂ inl ⇒ M|inr x₂ ⇒ N ]) [ x := x₁ ]
+  x₂ inl [ x := x₁ ]
+  inr x₂ [ x := x₁ ]
+  case_[_inl⇒_|inr_⇒_] x₂ x₃ x₄ x₅ [ x := x₁ ]
+
+
 -- to be completed
--- (case V [x inl⇒M|inr y⇒N]) [ y := V ] with x ≟ y
+(case K [l inl ⇒ M|inr r ⇒ N]) [ y := V ] with l ≟ y
+... | yes _          = case K [ y := V ] [l inl ⇒ M [ y := V ] |inr r ⇒ N]
+... | no _           = case K [ y := V ] [l inl ⇒ M [ y := V ] |inr r ⇒ N [ y := V ] ]
+(case K [l inl ⇒ M|inr r ⇒ N]) [ y := V ] with r ≟ y
+... | yes _          = case K [ y := V ] [l inl ⇒ M|inr r ⇒ N [ y := V ] ]
+... | no _           = case K [ y := V ] [l inl ⇒ M [ y := V ]|inr r ⇒ N [ y := V ] ]                                              
 
--- Examples hehe
-
+-- Examples
 _ : (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ] ≡ ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")
 _ = refl
 
@@ -536,3 +547,4 @@ This chapter uses the following unicode:
 
 We compose reduction `—→` from an em dash `—` and an arrow `→`.
 Similarly for reflexive and transitive closure `—↠`. -}
+-}
