@@ -108,7 +108,18 @@ data Value : Term → Set where
       --------------
     → Value (`suc V)
 
--- add inl et inl
+{-
+-- add inl et inr
+
+ -- V-inl : A
+      ------------
+      → Value (?)
+
+ -- V-inr : B 
+      ------------
+      → Value (?)
+-}
+
 
 infix 9 _[_:=_]
 
@@ -129,6 +140,7 @@ _[_:=_] : Term → Id → Term → Term
 ... | yes _          =  μ x ⇒ N
 ... | no  _          =  μ x ⇒ N [ y := V ]
 
+
 {-
 (case K [ x₂ inl ⇒ M|inr x₂ ⇒ N ]) [ x := x₁ ]
   x₂ inl [ x := x₁ ]
@@ -143,6 +155,8 @@ _[_:=_] : Term → Id → Term → Term
 (case K [l inl ⇒ M|inr r ⇒ N]) [ y := V ] with r ≟ y
 ... | yes _          = case K [ y := V ] [l inl ⇒ M|inr r ⇒ N [ y := V ] ]
 ... | no _           = case K [ y := V ] [l inl ⇒ M [ y := V ]|inr r ⇒ N [ y := V ] ]                                              
+
+-}
 
 -- Examples
 _ : (ƛ "z" ⇒ ` "s" · (` "s" · ` "z")) [ "s" := sucᶜ ] ≡ ƛ "z" ⇒ sucᶜ · (sucᶜ · ` "z")
@@ -162,6 +176,7 @@ _ = refl
 
 -- Your code goes here
 
+{-
 -- Reduction
 infix 4 _—→_
 
