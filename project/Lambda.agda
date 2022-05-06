@@ -25,7 +25,7 @@ infix  5  μ_⇒_ --fixpoint
 infixl 7  _·_ --application
 infix  8  `suc_ --successor
 infix  9  `_  --variables
-infixl 10 _inl -- left injection 
+infixl 10 inl_ -- left injection 
 infixr 10 inr_ --right injection
 
 data Term : Set where
@@ -36,9 +36,9 @@ data Term : Set where
   `suc_                   :  Term → Term
   case_[zero⇒_|suc_⇒_]    :  Term → Term → Id → Term → Term
   μ_⇒_                    :  Id → Term → Term
-  _inl                     : Term → Term 
+  inl_                     : Term → Term 
   inr_                     : Term → Term 
-  case_[_inl⇒_|inr_⇒_] :  Term → Term → Id → Term → Term
+  case_[inl_⇒_|inr_⇒_] :  Term → Term → Id → Term → Term
 
 
  --Example terms
